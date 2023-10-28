@@ -9,13 +9,27 @@ fn main() -> Result<()> {
     })?;
     // parse data
     let document = scraper::Html::parse_document(&html_content);
-    let html_table_row_selector = scraper::Selector::parse("tr").unwrap();
-    let html_table_rows = document.select(&html_table_row_selector);
-    for row in html_table_rows {
-        println!("{row:?}");
-        break;
+    for hero_row in document.select(&scraper::Selector::parse("tr").unwrap()) {
+        let col_selector = scraper::Selector::parse("td").unwrap();
+        let heros = hero_row
+            .select(&col_selector)
+            .map(get_hero_name)
+            .collect::<Vec<_>>();
+        println!("{:?}", heros);
     }
     Ok(())
+}
+
+fn get_hero_name(column: scraper::ElementRef) -> String {
+    column
+        .select(&scraper::Selector::parse("a").unwrap())
+        .map(|ele| ele.text().collect::<String>())
+        .collect::<Vec<String>>()
+        .concat()
+}
+
+struct BjjHero {
+    name: String,
 }
 
 fn load_data(url: &str) -> String {
