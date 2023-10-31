@@ -81,20 +81,22 @@ fn cache<F>(cache_name: &str, f: F) -> Result<String>
 where
     F: Fn() -> String,
 {
+    // create dir if not exists for cache
     let dir_path = Path::new("./artifacts");
     if !dir_path.exists() {
         create_dir(&dir_path);
     }
+    // load cache if exists or fetch data from the web
     let cache_path = dir_path.join(Path::new(cache_name));
-    let output = if cache_path.exists() {
+    Ok(if cache_path.exists() {
         println!("Loading cache: {:?}", cache_path);
         fs::read_to_string(&cache_path)?
     } else {
         println!("Fetching data from the web to {:?}", cache_path);
-        f()
-    };
-    dump(&cache_path, &output)?;
-    Ok(output)
+        let data = f();
+        dump(&cache_path, &data)?;
+        data
+    })
 }
 
 fn create_dir(dir_path: &Path) {
